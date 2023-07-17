@@ -14,66 +14,103 @@ namespace Helper
 
         private Vector3 _startPosition = Vector3.zero;
         private Animator _animator;
-        private string _animationStartPath = "EverydayMotionPackFree/Mecanim/female_chair";
-        private string _animationRunPath = "EverydayMotionPackFree/Mecanim/female_sprint";
-        private string _animationIdlePath = "EverydayMotionPackFree/Mecanim/female_pant";
+        private Coroutine _coroutine;
+        private bool isRuning = true;
 
         public void StartMoving()
         {
             _animator = player.GetComponent<Animator>();
-
-            //new LookAt().Set(GameObject.Find("chair"), transform);
-
-            switch (type)
-            {
-                case TypesOfMovement.Square:
-                    player.StartCoroutine(StandUpAndRun());
-                    break;
-
-            }
+            _coroutine = player.StartCoroutine(StandUpAndRun());
         }
 
         private IEnumerator StandUpAndRun()
         {
             _animator.SetBool("StandUp", true);
 
-
             while (_animator.IsInTransition(0) || !_animator.GetCurrentAnimatorStateInfo(0).IsName("female_idle_pant"))
             {
                 yield return null;
             }
 
-            if (_animator.GetCurrentAnimatorStateInfo(0).IsName("female_idle_pant"))
+            while (_animator.GetCurrentAnimatorStateInfo(0).IsName("female_idle_pant"))
             {
-                yield return Moving(step);
+                switch (type)
+                {
+                    case TypesOfMovement.Square:
+                        yield return SquareMoving();
+                        break;
+                    case TypesOfMovement.Triangle:
+                        yield return TriangleMoving();
+                        break;
 
-                yield return Rotating(90);
-                yield return Moving(step / 2);
+                }
 
-                yield return Rotating(0);
-                yield return Moving(step);
-
-                yield return Rotating(-90);
-                yield return Moving(step);
-
-                yield return Rotating(-180);
-                yield return Moving(step);
-
-                yield return Rotating(-270);
-                yield return Moving(step / 2);
-
-                yield return Rotating(-180);
-                yield return Moving(step);
-
-
-                yield return Rotating(-180);
-
+                yield return null;
             }
+
+            yield break;
+        }
+
+        private IEnumerator SquareMoving()
+        {
+            yield return Moving(step);
+
+            yield return Rotating(90);
+            yield return Moving(step / 2);
+
+            yield return Rotating(0);
+            yield return Moving(step);
+
+            yield return Rotating(270);
+            yield return Moving(step);
+
+            yield return Rotating(180);
+            yield return Moving(step);
+
+            yield return Rotating(90);
+            yield return Moving(step / 2);
+
+            yield return Rotating(180);
+            yield return Moving(step);
+
+            yield return Rotating(0);
+
+            yield return Stop();
+
+            yield break;
+        }
+
+        private IEnumerator TriangleMoving()
+        {
+            yield return Moving(step);
+
+            yield return Rotating(90);
+            yield return Moving(step / 2);
+
+            yield return Rotating(330);
+            yield return Moving(step);
+
+            yield return Rotating(210);
+            yield return Moving(step);
+  
+            yield return Rotating(90);
+            yield return Moving(step / 2);
+
+            yield return Rotating(180);
+            yield return Moving(step);
+
+            yield return Rotating(0);
+
+            yield return Stop();
+
+            yield break;
         }
 
         private IEnumerator Moving(float step)
         {
-            _animator.runtimeAnimatorController = Resources.Load<RuntimeAnimatorController>(_animationRunPath);
+            _animator.SetBool("isRuning", true);
+            _animator.speed = speed / 5;
+
             Vector3 targetPosition = transform.position + transform.forward * step;
 
             while (transform.position != targetPosition)
@@ -83,22 +120,29 @@ namespace Helper
                 yield return null;
             }
 
-            _animator.runtimeAnimatorController = Resources.Load<RuntimeAnimatorController>(_animationIdlePath);
+            _animator.SetBool("isRuning", false);
 
             yield break;
         }
 
         private IEnumerator Rotating(float angle)
         {
-
-            while (transform.localEulerAngles.y < angle)
+            while (transform.localEulerAngles.y != angle)
             {
-                transform.localRotation *= Quaternion.Euler(0, 50f * speed * Time.deltaTime, 0);
+                transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(0, angle,0), 50f * speed * Time.deltaTime);
 
                 yield return null;
             }
 
-            transform.localRotation = Quaternion.Euler(0, angle, 0);
+            yield break;
+        }
+
+        private IEnumerator Stop()
+        {
+            Debug.Log("1");
+            _animator.speed = 1;
+            _animator.SetBool("StandUp", false);
+            player.StopCoroutine(_coroutine);
 
             yield break;
         }
