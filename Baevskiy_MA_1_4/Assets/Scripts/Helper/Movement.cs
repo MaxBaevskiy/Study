@@ -1,4 +1,6 @@
 ﻿using System.Collections;
+using System.Linq;
+using TMPro;
 using UnityEngine;
 
 namespace Helper
@@ -42,7 +44,12 @@ namespace Helper
                     case TypesOfMovement.Triangle:
                         yield return TriangleMoving();
                         break;
-
+                    case TypesOfMovement.Hexagon:
+                        yield return HexMoving();
+                        break;
+                    case TypesOfMovement.Star:
+                        yield return StarMoving();
+                        break;
                 }
 
                 yield return null;
@@ -70,11 +77,6 @@ namespace Helper
             yield return Rotating(90);
             yield return Moving(step / 2);
 
-            yield return Rotating(180);
-            yield return Moving(step);
-
-            yield return Rotating(0);
-
             yield return Stop();
 
             yield break;
@@ -96,22 +98,81 @@ namespace Helper
             yield return Rotating(90);
             yield return Moving(step / 2);
 
-            yield return Rotating(180);
+            yield return Stop();
+
+            yield break;
+        }
+
+        private IEnumerator HexMoving()
+        {
+            yield return Moving(step);
+
+            yield return Rotating(60);
             yield return Moving(step);
 
             yield return Rotating(0);
+            yield return Moving(step);
+
+            yield return Rotating(300);
+            yield return Moving(step);
+
+            yield return Rotating(240);
+            yield return Moving(step);
+
+            yield return Rotating(180);
+            yield return Moving(step);
+
+            yield return Rotating(120);
+            yield return Moving(step);
 
             yield return Stop();
 
             yield break;
         }
 
+        private IEnumerator StarMoving()
+        {
+            yield return Moving(step);
+
+            yield return Rotating(72);
+            yield return Moving(step);
+
+            yield return Rotating(0);
+            yield return Moving(step);
+
+            yield return Rotating(288);
+            yield return Moving(step);
+
+            yield return Rotating(216);
+            yield return Moving(step);
+
+            yield return Rotating(144);
+            yield return Moving(step);
+
+            yield return Stop();
+
+            yield break;
+
+        }
+
         private IEnumerator Moving(float step)
+        {
+            Vector3 targetPosition = transform.position + transform.forward * step;
+
+            yield return Run(targetPosition);
+            yield break;
+        }
+
+        private IEnumerator MovingTo(Vector3 targetPosition)
+        {
+            yield return Run(targetPosition);
+            yield break;
+        }
+
+        private IEnumerator Run(Vector3 targetPosition)
         {
             _animator.SetBool("isRuning", true);
             _animator.speed = speed / 5;
-
-            Vector3 targetPosition = transform.position + transform.forward * step;
 
             while (transform.position != targetPosition)
             {
@@ -127,9 +188,12 @@ namespace Helper
 
         private IEnumerator Rotating(float angle)
         {
-            while (transform.localEulerAngles.y != angle)
+            Quaternion targetRotation = transform.rotation;
+            targetRotation = Quaternion.AngleAxis(angle, new Vector3(0, 1, 0));
+
+            while (targetRotation.eulerAngles.y != transform.eulerAngles.y)
             {
-                transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(0, angle,0), 50f * speed * Time.deltaTime);
+                transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(0, angle, 0), 50f * speed * Time.deltaTime);
 
                 yield return null;
             }
@@ -139,10 +203,34 @@ namespace Helper
 
         private IEnumerator Stop()
         {
-            Debug.Log("1");
+            yield return LookAt(GameObject.Find("chair"));
+
+            yield return MovingTo(_startPosition); 
+            yield return Rotating(0);
+
             _animator.speed = 1;
             _animator.SetBool("StandUp", false);
             player.StopCoroutine(_coroutine);
+
+            transform.position = _startPosition; // normilize position values.
+
+            yield break;
+        }
+
+        private IEnumerator LookAt(GameObject gameObject)
+        {
+            Vector3 lookAtRotation = Quaternion.LookRotation(gameObject.transform.position - transform.position).eulerAngles;
+            float startRotY = transform.eulerAngles.y;
+            float endRotY = 0;
+
+            while (startRotY != endRotY)
+            {
+                startRotY = transform.eulerAngles.y;
+                transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(Vector3.Scale(lookAtRotation, new Vector3(0, 1, 0))), 50f * speed * Time.deltaTime);
+                endRotY = transform.eulerAngles.y;
+
+                yield return null;
+            }
 
             yield break;
         }
