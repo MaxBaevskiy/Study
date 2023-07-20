@@ -10,17 +10,24 @@ namespace Helper
         public TypesOfMovement type { get; set; }
         public float speed { get; set; }
         public float step { get; set; }
+        public float waitTime { get; set; }
         public Transform transform { get; set; }
-        public Coroutine coroutine { get; set; }
         public MonoBehaviour player { get; set; }
 
         private Vector3 _startPosition = Vector3.zero;
         private Animator _animator;
         private Coroutine _coroutine;
+        private Coroutine _restartCoroutine;
         private bool isRuning = true;
+        private CreateObjects _createObjects = new CreateObjects();
 
         public void StartMoving()
         {
+            if (_coroutine is Coroutine)
+            {
+                player.StopCoroutine(_coroutine);
+            }
+
             _animator = player.GetComponent<Animator>();
             _coroutine = player.StartCoroutine(StandUpAndRun());
         }
@@ -64,15 +71,27 @@ namespace Helper
 
             yield return Rotating(90);
             yield return Moving(step / 2);
+            _createObjects.Create(transform);
+
+            yield return new WaitForSeconds(waitTime);
 
             yield return Rotating(0);
             yield return Moving(step);
+            _createObjects.Create(transform);
+
+            yield return new WaitForSeconds(waitTime);
 
             yield return Rotating(270);
             yield return Moving(step);
+            _createObjects.Create(transform);
+
+            yield return new WaitForSeconds(waitTime);
 
             yield return Rotating(180);
             yield return Moving(step);
+            _createObjects.Create(transform);
+
+            yield return new WaitForSeconds(waitTime);
 
             yield return Rotating(90);
             yield return Moving(step / 2);
@@ -88,13 +107,22 @@ namespace Helper
 
             yield return Rotating(90);
             yield return Moving(step / 2);
+            _createObjects.Create(transform);
+
+            yield return new WaitForSeconds(waitTime);
 
             yield return Rotating(330);
             yield return Moving(step);
+            _createObjects.Create(transform);
+
+            yield return new WaitForSeconds(waitTime);
 
             yield return Rotating(210);
             yield return Moving(step);
-  
+            _createObjects.Create(transform);
+
+            yield return new WaitForSeconds(waitTime);
+
             yield return Rotating(90);
             yield return Moving(step / 2);
 
@@ -109,21 +137,33 @@ namespace Helper
 
             yield return Rotating(60);
             yield return Moving(step);
+            yield return new WaitForSeconds(waitTime);
+            _createObjects.Create(transform);
 
             yield return Rotating(0);
             yield return Moving(step);
+            yield return new WaitForSeconds(waitTime);
+            _createObjects.Create(transform);
 
             yield return Rotating(300);
             yield return Moving(step);
+            yield return new WaitForSeconds(waitTime);
+            _createObjects.Create(transform);
 
             yield return Rotating(240);
             yield return Moving(step);
+            yield return new WaitForSeconds(waitTime);
+            _createObjects.Create(transform);
 
             yield return Rotating(180);
             yield return Moving(step);
+            yield return new WaitForSeconds(waitTime);
+            _createObjects.Create(transform);
 
             yield return Rotating(120);
             yield return Moving(step);
+            yield return new WaitForSeconds(waitTime);
+            _createObjects.Create(transform);
 
             yield return Stop();
 
@@ -134,30 +174,92 @@ namespace Helper
         {
             yield return Moving(step);
 
-            yield return Rotating(72);
+            yield return Rotating(54f);
+            yield return Moving(step);
+            yield return new WaitForSeconds(waitTime);
+            _createObjects.Create(transform);
+
+            yield return Rotating(342f);
+            yield return Moving(step);
+            yield return new WaitForSeconds(waitTime);
+            _createObjects.Create(transform);
+
+            yield return Rotating(270f);
+            yield return Moving(step);
+            yield return new WaitForSeconds(waitTime);
+            _createObjects.Create(transform);
+
+            yield return Rotating(198.1f);
+            yield return Moving(step);
+            yield return new WaitForSeconds(waitTime);
+            _createObjects.Create(transform);
+
+            yield return Rotating(126f);
+            yield return Moving(step);
+            yield return new WaitForSeconds(waitTime);
+            _createObjects.Create(transform);
+
+            yield return Moving(step);
+            yield return new WaitForSeconds(waitTime);
+            _createObjects.Create(transform);
+
+            yield return LookAt(_createObjects.objectsList[0]);
+            yield return MovingTo(_createObjects.objectsList[0].transform.position);
+
+            yield return LookAt(_createObjects.objectsList[1]);
+            yield return MovingTo(_createObjects.objectsList[1].transform.position);
+
+            yield return Rotating(90f);
             yield return Moving(step);
 
-            yield return Rotating(0);
-            yield return Moving(step);
+            yield return new WaitForSeconds(waitTime);
+            _createObjects.Create(transform);
 
-            yield return Rotating(288);
-            yield return Moving(step);
+            yield return LookAt(_createObjects.objectsList[0]);
+            yield return MovingTo(_createObjects.objectsList[0].transform.position);
 
-            yield return Rotating(216);
-            yield return Moving(step);
+            yield return LookAt(_createObjects.objectsList[1]);
+            yield return MovingTo(_createObjects.objectsList[1].transform.position);
 
-            yield return Rotating(144);
+            yield return Rotating(332f);
+
             yield return Moving(step);
+            yield return new WaitForSeconds(waitTime);
+            _createObjects.Create(transform);
+
+            yield return LookAt(_createObjects.objectsList[2]);
+            yield return MovingTo(_createObjects.objectsList[2].transform.position);
+
+            yield return Rotating(270f);
+            yield return Moving(step);
+            yield return new WaitForSeconds(waitTime);
+            _createObjects.Create(transform);
+
+            yield return LookAt(_createObjects.objectsList[3]);
+            yield return MovingTo(_createObjects.objectsList[3].transform.position);
+
+            yield return LookAt(_createObjects.objectsList[4]);
+            yield return MovingTo(_createObjects.objectsList[4].transform.position);
+
+            yield return Rotating(234f);
+            yield return Moving(step);
+            yield return new WaitForSeconds(waitTime);
+            _createObjects.Create(transform);
+
+            yield return LookAt(_createObjects.objectsList[3]);
+            yield return MovingTo(_createObjects.objectsList[3].transform.position);
+
+            yield return LookAt(_createObjects.objectsList[4]);
+            yield return MovingTo(_createObjects.objectsList[4].transform.position);
 
             yield return Stop();
 
             yield break;
-
         }
 
-        private IEnumerator Moving(float step)
+        private IEnumerator Moving(float stepSize)
         {
-            Vector3 targetPosition = transform.position + transform.forward * step;
+            Vector3 targetPosition = transform.position + transform.forward * stepSize;
 
             yield return Run(targetPosition);
             yield break;
@@ -235,6 +337,24 @@ namespace Helper
             yield break;
         }
 
+        public void Restart()
+        {
+            player.StopCoroutine(_coroutine);
+            _restartCoroutine = player.StartCoroutine(ReturnToStart());
+
+            _createObjects.RemoveAllObjects();
+        }
+
+        public IEnumerator ReturnToStart()
+        {
+            yield return Stop();
+
+            _coroutine = player.StartCoroutine(StandUpAndRun());
+
+            player.StopCoroutine(_restartCoroutine);
+
+            yield break;
+        }
 
     }
 }
