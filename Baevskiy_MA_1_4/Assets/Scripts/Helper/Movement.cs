@@ -316,6 +316,8 @@ namespace Helper
 
             transform.position = _startPosition; // normilize position values.
 
+            _coroutine = player.StartCoroutine(StandUpAndRun());
+
             yield break;
         }
 
@@ -348,8 +350,6 @@ namespace Helper
         public IEnumerator ReturnToStart()
         {
             yield return Stop();
-
-            _coroutine = player.StartCoroutine(StandUpAndRun());
 
             player.StopCoroutine(_restartCoroutine);
 
